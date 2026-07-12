@@ -14,6 +14,49 @@ import {
 
 const PRIVILEGED_ROLES = ["ASSET_MANAGER", "ADMIN"] as const;
 
+export type LookupAuditItemResult =
+  | {
+      found: true;
+      item: {
+        assetTag: string;
+        assetName: string;
+        photoUrl: string | null;
+        location: string;
+        status: string;
+      };
+    }
+  | { found: false; error: string };
+
+/** Client-callable — the scan view can't query Prisma directly. */
+export async function lookupAuditItemAction(
+  cycleId: string,
+  assetTag: string
+): Promise<LookupAuditItemResult> {
+  const session = await auth();
+  if (!session?.user) return { found: false, error: "Sign in required." };
+
+  const cycle = await prisma.auditCycle.findUniqueOrThrow({ where: { id: cycleId } });
+  if (cycle.status !== "OPEN") {
+    return { found: false, error: "This audit cycle is closed." };
+  }
+
+  const lookup = await getAuditItemByTag(cycleId, assetTag);
+  if (!lookup) {
+    return { found: false, error: `${assetTag} isn't part of this audit cycle.` };
+  }
+
+  return {
+    found: true,
+    item: {
+      assetTag: lookup.asset.assetTag,
+      assetName: lookup.asset.name,
+      photoUrl: lookup.asset.photoUrl,
+      location: lookup.asset.location,
+      status: lookup.asset.status,
+    },
+  };
+}
+
 export type SubmitAuditResultResult =
   | { success: true; assetTag: string; assetName: string }
   | { success: false; error: string };
