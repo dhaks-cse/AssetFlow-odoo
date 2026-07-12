@@ -75,11 +75,15 @@ export default async function AssetsPage({
                 </TableCell>
               </TableRow>
             ) : (
-              assets.map((asset) => {
+              assets.map((asset, i) => {
                 const active = asset.allocations[0];
                 const holder = active?.holder?.name ?? active?.department?.name ?? "—";
                 return (
-                  <TableRow key={asset.id} className="cursor-pointer">
+                  <TableRow
+                    key={asset.id}
+                    className="cursor-pointer animate-in fade-in slide-in-from-bottom-1 fill-mode-both"
+                    style={{ animationDelay: `${Math.min(i, 20) * 25}ms`, animationDuration: "300ms" }}
+                  >
                     <TableCell className="font-medium">
                       <Link href={`/assets/${asset.id}`} className="block">
                         {asset.assetTag}
