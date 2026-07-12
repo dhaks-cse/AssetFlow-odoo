@@ -8,7 +8,6 @@ import { getAssetFilterOptions } from "@/lib/queries/assets";
 import { getAssetsForMaintenanceSelect } from "@/lib/queries/maintenance";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -19,6 +18,8 @@ import {
 } from "@/components/ui/table";
 import { RegisterAssetDialog } from "@/components/dashboard/register-asset-dialog";
 import { RaiseMaintenanceDialog } from "@/components/maintenance/raise-maintenance-dialog";
+import { LiveKpis } from "@/components/dashboard/live-kpis";
+import { FadeIn } from "@/components/motion/fade-in";
 
 const PRIVILEGED_ROLES = ["ASSET_MANAGER", "ADMIN"];
 
@@ -37,98 +38,84 @@ export default async function DashboardPage() {
     getAssetsForMaintenanceSelect(),
   ]);
 
-  const kpiCards = [
-    { label: "Assets Available", value: kpis.available },
-    { label: "Assets Allocated", value: kpis.allocated },
-    { label: "Under Maintenance", value: kpis.underMaintenance },
-    { label: "Active Bookings", value: kpis.activeBookings },
-    { label: "Pending Transfers", value: kpis.pendingTransfers },
-    { label: "Upcoming Returns", value: kpis.upcomingReturns },
-  ];
-
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
-      <div>
+      <FadeIn>
         <h1 className="text-2xl font-semibold tracking-tight">
           Welcome back, {session?.user.name?.split(" ")[0]}
         </h1>
         <p className="text-sm text-muted-foreground">Your organization&apos;s asset snapshot.</p>
-      </div>
+      </FadeIn>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {kpiCards.map((card) => (
-          <Card key={card.label} size="sm">
-            <CardHeader>
-              <CardTitle className="text-xs font-normal text-muted-foreground">
-                {card.label}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-2xl font-semibold tabular-nums">{card.value}</CardContent>
-          </Card>
-        ))}
-      </div>
+      <FadeIn delay={0.05}>
+        <LiveKpis initial={kpis} />
+      </FadeIn>
 
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold">Quick Actions</h2>
-        <div className="flex flex-wrap gap-2">
-          {isPrivileged ? (
-            <RegisterAssetDialog categories={categories} departments={departments} />
-          ) : null}
-          <Button size="sm" variant="outline" render={<Link href="/bookings" />}>
-            Book Resource
-          </Button>
-          <RaiseMaintenanceDialog assets={maintenanceAssets} />
-        </div>
-      </section>
+      <FadeIn delay={0.1}>
+        <section className="space-y-2">
+          <h2 className="text-sm font-semibold">Quick Actions</h2>
+          <div className="flex flex-wrap gap-2">
+            {isPrivileged ? (
+              <RegisterAssetDialog categories={categories} departments={departments} />
+            ) : null}
+            <Button size="sm" variant="outline" render={<Link href="/bookings" />}>
+              Book Resource
+            </Button>
+            <RaiseMaintenanceDialog assets={maintenanceAssets} />
+          </div>
+        </section>
+      </FadeIn>
 
-      <section className="space-y-2">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-destructive">Overdue Returns</h2>
-          {overdue.length > 0 ? <Badge variant="destructive">{overdue.length}</Badge> : null}
-        </div>
-        <div className="overflow-hidden rounded-lg border border-destructive/30">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Asset</TableHead>
-                <TableHead>Holder</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Due</TableHead>
-                <TableHead>Overdue</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {overdue.length === 0 ? (
+      <FadeIn delay={0.15}>
+        <section className="space-y-2">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-destructive">Overdue Returns</h2>
+            {overdue.length > 0 ? <Badge variant="destructive">{overdue.length}</Badge> : null}
+          </div>
+          <div className="overflow-hidden rounded-lg border border-destructive/30">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
-                    Nothing overdue.
-                  </TableCell>
+                  <TableHead>Asset</TableHead>
+                  <TableHead>Holder</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Due</TableHead>
+                  <TableHead>Overdue</TableHead>
                 </TableRow>
-              ) : (
-                overdue.map((a) => (
-                  <TableRow key={a.id}>
-                    <TableCell className="font-medium">
-                      <Link href={`/assets/${a.asset.id}`} className="hover:underline">
-                        {a.asset.assetTag} — {a.asset.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{a.holder?.name ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {a.holder?.department?.name ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {fmt(a.expectedReturnDate)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="destructive">{a.overdueDays}d overdue</Badge>
+              </TableHeader>
+              <TableBody>
+                {overdue.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
+                      Nothing overdue.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </section>
+                ) : (
+                  overdue.map((a) => (
+                    <TableRow key={a.id}>
+                      <TableCell className="font-medium">
+                        <Link href={`/assets/${a.asset.id}`} className="hover:underline">
+                          {a.asset.assetTag} — {a.asset.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{a.holder?.name ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {a.holder?.department?.name ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {fmt(a.expectedReturnDate)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="destructive">{a.overdueDays}d overdue</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </section>
+      </FadeIn>
     </div>
   );
 }
