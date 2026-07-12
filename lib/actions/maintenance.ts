@@ -57,7 +57,21 @@ export async function approveMaintenanceAction(
         where: { id: maintenanceRequestId },
         data: { status: "APPROVED", approvedById: session.user.id, technician },
       });
-      await transitionAsset(tx, request.assetId, "MAINTENANCE_APPROVED", session.user.id);
+      const asset = await transitionAsset(
+        tx,
+        request.assetId,
+        "MAINTENANCE_APPROVED",
+        session.user.id
+      );
+
+      await tx.notification.create({
+        data: {
+          employeeId: request.raisedById,
+          title: "Maintenance request approved",
+          body: `Your request for ${asset.assetTag} was approved${technician ? ` — ${technician} is on it` : ""}.`,
+          link: `/assets/${request.assetId}`,
+        },
+      });
     });
   } catch (error) {
     if (error instanceof IllegalTransitionError) {
