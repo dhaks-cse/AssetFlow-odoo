@@ -6,6 +6,7 @@ import { getAssetDetail } from "@/lib/queries/assets";
 import { getEmployeesForSelect } from "@/lib/queries/employees";
 import { getBookingsForAssetOnDate } from "@/lib/queries/bookings";
 import { AssetStatusBadge } from "@/components/assets/asset-status-badge";
+import { StateMachineDiagram } from "@/components/assets/state-machine-diagram";
 import { AllocateDialog } from "@/components/allocations/allocate-dialog";
 import { ReturnDialog } from "@/components/allocations/return-dialog";
 import { BookingDatePicker } from "@/components/bookings/booking-date-picker";
@@ -85,6 +86,7 @@ export default async function AssetDetailPage({
           {asset.isBookable ? <TabsTrigger value="bookings">Bookings</TabsTrigger> : null}
           <TabsTrigger value="allocation">Allocation History</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance History</TabsTrigger>
+          <TabsTrigger value="lifecycle">Lifecycle</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
@@ -202,6 +204,12 @@ export default async function AssetDetailPage({
                 )}
               </TableBody>
             </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="lifecycle" className="mt-4">
+          <div className="flex flex-col items-center rounded-lg border p-6">
+            <StateMachineDiagram currentStatus={asset.status} />
           </div>
         </TabsContent>
       </Tabs>
