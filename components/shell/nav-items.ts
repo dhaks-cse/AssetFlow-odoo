@@ -36,6 +36,5 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/org-setup",
     icon: Building2Icon,
     roles: ["ADMIN"],
-    comingSoon: true,
   },
 ];
