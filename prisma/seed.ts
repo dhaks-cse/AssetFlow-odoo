@@ -1,4 +1,4 @@
-import { PrismaClient, Role, AssetStatus, AssetCondition, Priority } from "@prisma/client";
+import { PrismaClient, Prisma, Role, AssetStatus, AssetCondition, Priority } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -28,7 +28,7 @@ const DEPARTMENTS = [
   ["Facilities", "FAC"], ["IT Infrastructure", "ITI"], ["Research", "RND"],
 ];
 
-const CATEGORIES: [string, any][] = [
+const CATEGORIES: [string, Prisma.InputJsonValue][] = [
   ["Electronics", { warrantyMonths: 24 }],
   ["Furniture", { material: "text" }],
   ["Vehicles", { fuelType: "text" }],
@@ -79,7 +79,7 @@ async function main() {
 
   // ── People ───────────────────────────────────────────────────
   console.log("👥 Employees...");
-  const admin = await prisma.employee.create({
+  await prisma.employee.create({
     data: { name: "Ananya Rao", email: "admin@assetflow.io", passwordHash: hash,
             role: Role.ADMIN, departmentId: byCode.OPS.id },
   });
