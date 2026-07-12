@@ -82,7 +82,10 @@ export async function cancelBookingAction(bookingId: string) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized: sign in required");
 
-  const booking = await prisma.booking.findUniqueOrThrow({ where: { id: bookingId } });
+  const booking = await prisma.booking.findUniqueOrThrow({
+    where: { id: bookingId },
+    include: { asset: true },
+  });
 
   const isPrivileged = PRIVILEGED_ROLES.includes(
     session.user.role as (typeof PRIVILEGED_ROLES)[number]
@@ -95,6 +98,19 @@ export async function cancelBookingAction(bookingId: string) {
   }
 
   await prisma.booking.update({ where: { id: bookingId }, data: { status: "CANCELLED" } });
+
+  // Only notify when someone else cancelled it — the booker doesn't need a
+  // ping for their own action.
+  if (booking.bookedById !== session.user.id) {
+    await prisma.notification.create({
+      data: {
+        employeeId: booking.bookedById,
+        title: "Your booking was cancelled",
+        body: `${booking.asset.assetTag} — ${format(booking.startTime, "MMM d, h:mm a")} was cancelled by ${session.user.name}.`,
+        link: `/assets/${booking.assetId}`,
+      },
+    });
+  }
 
   revalidatePath(`/assets/${booking.assetId}`);
   revalidatePath("/bookings");
