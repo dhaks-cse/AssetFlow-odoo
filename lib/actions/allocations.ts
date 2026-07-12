@@ -217,7 +217,7 @@ export async function approveTransferAction(transferRequestId: string) {
   await prisma.$transaction(async (tx) => {
     const transfer = await tx.transferRequest.findUniqueOrThrow({
       where: { id: transferRequestId },
-      include: { allocation: true },
+      include: { allocation: { include: { asset: true } } },
     });
 
     if (transfer.status !== "REQUESTED") {
@@ -247,6 +247,15 @@ export async function approveTransferAction(transferRequestId: string) {
     });
     // Asset stays ALLOCATED throughout a transfer — only the holder
     // changes — so transitionAsset is never called here.
+
+    await tx.notification.create({
+      data: {
+        employeeId: transfer.requestedForId,
+        title: "Transfer approved",
+        body: `${transfer.allocation.asset.assetTag} is now yours.`,
+        link: `/assets/${transfer.allocation.assetId}`,
+      },
+    });
   });
 
   revalidatePath("/allocations");
@@ -256,9 +265,26 @@ export async function approveTransferAction(transferRequestId: string) {
 export async function rejectTransferAction(transferRequestId: string) {
   const session = await requireRole("ASSET_MANAGER", "ADMIN");
 
+  const transfer = await prisma.transferRequest.findUniqueOrThrow({
+    where: { id: transferRequestId },
+    include: { allocation: { include: { asset: true } } },
+  });
+  if (transfer.status !== "REQUESTED") {
+    throw new Error("This transfer request was already resolved.");
+  }
+
   await prisma.transferRequest.update({
     where: { id: transferRequestId },
     data: { status: "REJECTED", approvedById: session.user.id, resolvedAt: new Date() },
+  });
+
+  await prisma.notification.create({
+    data: {
+      employeeId: transfer.requestedForId,
+      title: "Transfer request rejected",
+      body: `Your request for ${transfer.allocation.asset.assetTag} was rejected.`,
+      link: `/assets/${transfer.allocation.assetId}`,
+    },
   });
 
   revalidatePath("/allocations");
