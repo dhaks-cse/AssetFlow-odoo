@@ -29,8 +29,8 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Bookings", href: "/bookings", icon: CalendarClockIcon },
   { label: "Maintenance", href: "/maintenance", icon: WrenchIcon },
   { label: "Audits", href: "/audits", icon: ClipboardCheckIcon },
-  { label: "Reports", href: "/reports", icon: BarChart3Icon, comingSoon: true },
-  { label: "Activity & Notifications", href: "/activity", icon: BellIcon, comingSoon: true },
+  { label: "Reports", href: "/reports", icon: BarChart3Icon },
+  { label: "Activity & Notifications", href: "/activity", icon: BellIcon },
   {
     label: "Org Setup",
     href: "/org-setup",
