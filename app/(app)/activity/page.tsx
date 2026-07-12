@@ -24,10 +24,10 @@ export default async function ActivityPage() {
 
       <section className="space-y-2">
         <h2 className="text-sm font-semibold">Activity Log</h2>
-        <Card className="w-fit">
-          <CardHeader>
+        <Card className="w-full">
+          <CardHeader className="items-center gap-1 py-10 text-center">
             <CardTitle className="text-sm text-muted-foreground">Coming soon</CardTitle>
-            <CardDescription>
+            <CardDescription className="max-w-sm">
               Every action is already being recorded — this view just isn&apos;t shown yet.
             </CardDescription>
           </CardHeader>
