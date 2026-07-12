@@ -156,7 +156,21 @@ export async function resolveMaintenanceAction(
         where: { id: maintenanceRequestId },
         data: { status: "RESOLVED", resolution, resolvedAt: new Date() },
       });
-      await transitionAsset(tx, request.assetId, "MAINTENANCE_RESOLVED", session.user.id);
+      const asset = await transitionAsset(
+        tx,
+        request.assetId,
+        "MAINTENANCE_RESOLVED",
+        session.user.id
+      );
+
+      await tx.notification.create({
+        data: {
+          employeeId: request.raisedById,
+          title: "Maintenance request resolved",
+          body: `${asset.assetTag} is fixed and available again.`,
+          link: `/assets/${request.assetId}`,
+        },
+      });
     });
   } catch (error) {
     if (error instanceof IllegalTransitionError) {
