@@ -1,8 +1,12 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { format } from "date-fns";
 
+import { auth } from "@/auth";
 import { getAssetDetail } from "@/lib/queries/assets";
+import { getEmployeesForSelect } from "@/lib/queries/employees";
 import { AssetStatusBadge } from "@/components/assets/asset-status-badge";
+import { AllocateDialog } from "@/components/allocations/allocate-dialog";
+import { ReturnDialog } from "@/components/allocations/return-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -14,6 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+const NOT_ALLOCATABLE = new Set(["UNDER_MAINTENANCE", "LOST", "RETIRED", "DISPOSED"]);
+
 function fmt(date: Date | null | undefined) {
   return date ? format(date, "MMM d, yyyy") : "—";
 }
@@ -24,11 +30,15 @@ export default async function AssetDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const asset = await getAssetDetail(id);
+  const [asset, session] = await Promise.all([getAssetDetail(id), auth()]);
 
   if (!asset) notFound();
+  if (!session?.user) redirect("/login");
 
   const activeAllocation = asset.allocations.find((a) => a.returnedAt === null);
+  const isHolder = activeAllocation?.holderId === session.user.id;
+  const canAllocate = !NOT_ALLOCATABLE.has(asset.status);
+  const employees = canAllocate && !isHolder ? await getEmployeesForSelect() : [];
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-6">
@@ -36,6 +46,17 @@ export default async function AssetDetailPage({
         <h1 className="text-2xl font-semibold tracking-tight">{asset.name}</h1>
         <Badge variant="secondary">{asset.assetTag}</Badge>
         <AssetStatusBadge status={asset.status} />
+        <div className="ml-auto">
+          {isHolder ? (
+            <ReturnDialog allocationId={activeAllocation!.id} />
+          ) : canAllocate ? (
+            <AllocateDialog
+              assetId={asset.id}
+              currentUser={{ id: session.user.id, role: session.user.role }}
+              employees={employees}
+            />
+          ) : null}
+        </div>
       </div>
 
       <Tabs defaultValue="overview">
