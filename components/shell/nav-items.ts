@@ -25,11 +25,7 @@ export type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/", icon: LayoutDashboardIcon },
   { label: "Assets", href: "/assets", icon: BoxesIcon },
-<<<<<<< HEAD
   { label: "Allocations", href: "/allocations", icon: ArrowRightLeftIcon },
-=======
-  { label: "Allocations", href: "/allocations", icon: ArrowRightLeftIcon, comingSoon: true },
->>>>>>> 48d540ce75de0fc0e56686626ee2b0fe71294fde
   { label: "Bookings", href: "/bookings", icon: CalendarClockIcon, comingSoon: true },
   { label: "Maintenance", href: "/maintenance", icon: WrenchIcon, comingSoon: true },
   { label: "Audits", href: "/audits", icon: ClipboardCheckIcon, comingSoon: true },
