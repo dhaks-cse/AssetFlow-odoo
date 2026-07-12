@@ -4,9 +4,13 @@ import { format } from "date-fns";
 import { auth } from "@/auth";
 import { getAssetDetail } from "@/lib/queries/assets";
 import { getEmployeesForSelect } from "@/lib/queries/employees";
+import { getBookingsForAssetOnDate } from "@/lib/queries/bookings";
 import { AssetStatusBadge } from "@/components/assets/asset-status-badge";
 import { AllocateDialog } from "@/components/allocations/allocate-dialog";
 import { ReturnDialog } from "@/components/allocations/return-dialog";
+import { BookingDatePicker } from "@/components/bookings/booking-date-picker";
+import { BookingDialog } from "@/components/bookings/booking-dialog";
+import { TimeSlotList } from "@/components/bookings/time-slot-list";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -19,17 +23,27 @@ import {
 } from "@/components/ui/table";
 
 const NOT_ALLOCATABLE = new Set(["UNDER_MAINTENANCE", "LOST", "RETIRED", "DISPOSED"]);
+const PRIVILEGED_ROLES = ["ASSET_MANAGER", "ADMIN"];
 
 function fmt(date: Date | null | undefined) {
   return date ? format(date, "MMM d, yyyy") : "—";
 }
 
+function parseDateParam(value: string | undefined) {
+  if (!value) return new Date();
+  const parsed = new Date(`${value}T00:00:00`);
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
 export default async function AssetDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ date?: string }>;
 }) {
   const { id } = await params;
+  const { date: dateParam } = await searchParams;
   const [asset, session] = await Promise.all([getAssetDetail(id), auth()]);
 
   if (!asset) notFound();
@@ -39,6 +53,12 @@ export default async function AssetDetailPage({
   const isHolder = activeAllocation?.holderId === session.user.id;
   const canAllocate = !NOT_ALLOCATABLE.has(asset.status);
   const employees = canAllocate && !isHolder ? await getEmployeesForSelect() : [];
+  const isPrivileged = PRIVILEGED_ROLES.includes(session.user.role);
+
+  const selectedDate = parseDateParam(dateParam);
+  const bookings = asset.isBookable
+    ? await getBookingsForAssetOnDate(asset.id, selectedDate)
+    : [];
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-6">
@@ -62,6 +82,7 @@ export default async function AssetDetailPage({
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          {asset.isBookable ? <TabsTrigger value="bookings">Bookings</TabsTrigger> : null}
           <TabsTrigger value="allocation">Allocation History</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance History</TabsTrigger>
         </TabsList>
@@ -82,6 +103,23 @@ export default async function AssetDetailPage({
             />
           </dl>
         </TabsContent>
+
+        {asset.isBookable ? (
+          <TabsContent value="bookings" className="mt-4 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <BookingDatePicker date={selectedDate} />
+              <div className="ml-auto">
+                <BookingDialog assetId={asset.id} date={selectedDate} />
+              </div>
+            </div>
+            <TimeSlotList
+              date={selectedDate}
+              bookings={bookings}
+              currentUserId={session.user.id}
+              canCancelAny={isPrivileged}
+            />
+          </TabsContent>
+        ) : null}
 
         <TabsContent value="allocation" className="mt-4">
           <div className="overflow-hidden rounded-lg border">
