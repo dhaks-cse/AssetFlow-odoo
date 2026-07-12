@@ -11,10 +11,10 @@ import { FadeIn } from "@/components/motion/fade-in";
 export default function SignupPage() {
   return (
     <main className="flex flex-1 items-center justify-center p-4">
-      <FadeIn>
-        <Card className="w-full max-w-sm">
+      <FadeIn className="w-full max-w-md px-4">
+        <Card className="w-full">
           <CardHeader>
-            <CardTitle>Create your account</CardTitle>
+            <CardTitle className="text-xl">Create your account</CardTitle>
             <CardDescription>
               New accounts start as Employee. An Admin can promote your role later.
             </CardDescription>

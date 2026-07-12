@@ -92,23 +92,38 @@ export function NotificationsBell({
           </div>
         ) : (
           <div className="max-h-80 overflow-y-auto">
-            {notifications.map((n) => (
-              <DropdownMenuItem
-                key={n.id}
-                className="flex flex-col items-start gap-0.5 whitespace-normal"
-                onClick={() => !n.read && markRead(n.id)}
-                render={n.link ? <Link href={n.link} /> : undefined}
-              >
-                <div className="flex w-full items-center gap-2">
-                  {!n.read ? <span className="size-1.5 shrink-0 rounded-full bg-primary" /> : null}
-                  <span className="text-sm font-medium">{n.title}</span>
-                </div>
-                <span className="text-xs text-muted-foreground">{n.body}</span>
-                <span className="text-[11px] text-muted-foreground">
-                  {formatDistanceToNow(n.createdAt, { addSuffix: true })}
-                </span>
-              </DropdownMenuItem>
-            ))}
+            {notifications.map((n) => {
+              const body = (
+                <>
+                  <div className="flex w-full items-center gap-2">
+                    {!n.read ? <span className="size-1.5 shrink-0 rounded-full bg-primary" /> : null}
+                    <span className="text-sm font-medium">{n.title}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{n.body}</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                  </span>
+                </>
+              );
+              return n.link ? (
+                <DropdownMenuItem
+                  key={n.id}
+                  className="flex flex-col items-start gap-0.5 whitespace-normal"
+                  onClick={() => !n.read && markRead(n.id)}
+                  render={<Link href={n.link} />}
+                >
+                  {body}
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  key={n.id}
+                  className="flex flex-col items-start gap-0.5 whitespace-normal"
+                  onClick={() => !n.read && markRead(n.id)}
+                >
+                  {body}
+                </DropdownMenuItem>
+              );
+            })}
           </div>
         )}
         <DropdownMenuSeparator />

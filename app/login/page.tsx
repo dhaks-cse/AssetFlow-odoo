@@ -13,10 +13,10 @@ export default function LoginPage() {
   return (
     <Preloader>
       <main className="flex flex-1 items-center justify-center p-4">
-        <FadeIn>
-          <Card className="w-full max-w-sm">
+        <FadeIn className="w-full max-w-md px-4">
+          <Card className="w-full">
             <CardHeader>
-              <CardTitle>Sign in to AssetFlow</CardTitle>
+              <CardTitle className="text-xl">Sign in to AssetFlow</CardTitle>
               <CardDescription>Enterprise asset &amp; resource management</CardDescription>
             </CardHeader>
             <CardContent>
