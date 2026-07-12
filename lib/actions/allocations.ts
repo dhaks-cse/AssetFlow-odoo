@@ -162,7 +162,20 @@ export async function allocateAssetAction(input: AllocateInput): Promise<Allocat
           expectedReturnDate,
         },
       });
-      await transitionAsset(tx, assetId, "ALLOCATE", session.user.id);
+      const asset = await transitionAsset(tx, assetId, "ALLOCATE", session.user.id);
+
+      // Only notify when someone else did the assigning — self-allocation
+      // needs no "you got a thing you just took" ping.
+      if (holderId !== session.user.id) {
+        await tx.notification.create({
+          data: {
+            employeeId: holderId,
+            title: "Asset assigned to you",
+            body: `${asset.assetTag} has been allocated to you.`,
+            link: `/assets/${assetId}`,
+          },
+        });
+      }
     });
 
     revalidatePath(`/assets/${assetId}`);
