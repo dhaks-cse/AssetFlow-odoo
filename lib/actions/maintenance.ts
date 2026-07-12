@@ -92,6 +92,7 @@ export async function rejectMaintenanceAction(
 
   const request = await prisma.maintenanceRequest.findUniqueOrThrow({
     where: { id: maintenanceRequestId },
+    include: { asset: true },
   });
   if (request.status !== "PENDING") {
     return { success: false, error: "This request was already resolved." };
@@ -100,6 +101,15 @@ export async function rejectMaintenanceAction(
   await prisma.maintenanceRequest.update({
     where: { id: maintenanceRequestId },
     data: { status: "REJECTED" },
+  });
+
+  await prisma.notification.create({
+    data: {
+      employeeId: request.raisedById,
+      title: "Maintenance request rejected",
+      body: `Your request for ${request.asset.assetTag} (${request.issue}) was rejected.`,
+      link: `/assets/${request.assetId}`,
+    },
   });
 
   revalidatePath("/maintenance");
