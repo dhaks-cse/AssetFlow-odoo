@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { getNotifications, getUnreadNotificationCount } from "@/lib/queries/notifications";
 import { SidebarNav } from "@/components/shell/sidebar-nav";
 import { Topbar } from "@/components/shell/topbar";
 
@@ -19,6 +20,11 @@ export default async function AppLayout({
 
   const { name, email, role } = session.user;
 
+  const [notifications, unreadCount] = await Promise.all([
+    getNotifications(session.user.id),
+    getUnreadNotificationCount(session.user.id),
+  ]);
+
   return (
     <div className="flex flex-1">
       <aside className="hidden w-56 shrink-0 flex-col border-r md:flex">
@@ -28,7 +34,13 @@ export default async function AppLayout({
         <SidebarNav role={role} />
       </aside>
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Topbar name={name ?? email ?? "User"} email={email ?? ""} role={role} />
+        <Topbar
+          name={name ?? email ?? "User"}
+          email={email ?? ""}
+          role={role}
+          notifications={notifications}
+          unreadCount={unreadCount}
+        />
         <main className="flex flex-1 flex-col overflow-y-auto">{children}</main>
       </div>
     </div>

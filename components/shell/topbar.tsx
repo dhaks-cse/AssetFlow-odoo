@@ -19,6 +19,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { RoleBadge } from "@/components/shell/role-badge";
 import { SidebarNav } from "@/components/shell/sidebar-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationsBell, type NotificationSummary } from "@/components/shell/notifications-bell";
 
 function initials(name: string) {
   return name
@@ -33,10 +34,14 @@ export function Topbar({
   name,
   email,
   role,
+  notifications,
+  unreadCount,
 }: {
   name: string;
   email: string;
   role: Role;
+  notifications: NotificationSummary[];
+  unreadCount: number;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -63,6 +68,7 @@ export function Topbar({
       </div>
 
       <div className="flex items-center gap-2">
+        <NotificationsBell notifications={notifications} unreadCount={unreadCount} />
         <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger
